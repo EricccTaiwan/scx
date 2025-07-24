@@ -21,9 +21,9 @@ use crate::StatsCtx;
 
 fn signed(x: f64) -> String {
     if x >= 0.0f64 {
-        format!("{:+7.2}", x)
+        format!("{x:+7.2}")
     } else {
-        format!("{:7.2}", x)
+        format!("{x:7.2}")
     }
 }
 
@@ -259,7 +259,7 @@ pub fn server_data() -> StatsServerData<StatsCtx, (StatsCtx, ClusterStats)> {
 
 pub fn monitor(intv: Duration, shutdown: Arc<AtomicBool>) -> Result<()> {
     scx_utils::monitor_stats::<ClusterStats>(
-        &vec![],
+        &[],
         intv,
         || shutdown.load(Ordering::Relaxed),
         |cst| {
