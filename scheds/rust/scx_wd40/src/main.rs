@@ -288,7 +288,7 @@ impl StatsCtx {
         for stat in 0..bpf_intf::stat_idx_RUSTY_NR_STATS {
             let cpu_stat_vec = stats_map
                 .lookup_percpu(&stat.to_ne_bytes(), libbpf_rs::MapFlags::ANY)
-                .with_context(|| format!("Failed to lookup stat {}", stat))?
+                .with_context(|| format!("Failed to lookup stat {stat}"))?
                 .expect("per-cpu stat should exist");
             let sum = cpu_stat_vec
                 .iter()
@@ -333,7 +333,7 @@ impl StatsCtx {
                 .bpf_stats
                 .iter()
                 .zip(rhs.bpf_stats.iter())
-                .map(|(lhs, rhs)| sub_or_zero(&lhs, &rhs))
+                .map(|(lhs, rhs)| sub_or_zero(lhs, rhs))
                 .collect(),
             time_used: self.time_used - rhs.time_used,
         }
@@ -468,7 +468,7 @@ impl<'a> Scheduler<'a> {
             Self::setup_topology_node(skel, node.span.as_raw_slice(), 0, id)?;
         }
 
-        for (id, (_, llc)) in topo.all_llcs.into_iter().into_iter().enumerate() {
+        for (id, (_, llc)) in topo.all_llcs.into_iter().enumerate() {
             Self::setup_topology_node(
                 skel,
                 Arc::<Llc>::into_inner(llc)
@@ -479,7 +479,7 @@ impl<'a> Scheduler<'a> {
                 id,
             )?;
         }
-        for (id, (_, core)) in topo.all_cores.into_iter().into_iter().enumerate() {
+        for (id, (_, core)) in topo.all_cores.into_iter().enumerate() {
             Self::setup_topology_node(
                 skel,
                 Arc::<Core>::into_inner(core)
@@ -490,7 +490,7 @@ impl<'a> Scheduler<'a> {
                 id,
             )?;
         }
-        for (id, (_, cpu)) in topo.all_cpus.into_iter().into_iter().enumerate() {
+        for (id, (_, cpu)) in topo.all_cpus.into_iter().enumerate() {
             let mut mask = [0; 9];
             mask[cpu.id.checked_shr(64).unwrap_or(0)] |= 1 << (cpu.id % 64);
             Self::setup_topology_node(skel, &mask, 0, id)?;
@@ -604,7 +604,7 @@ impl<'a> Scheduler<'a> {
             }
 
             update_bpf_mask(bss_data.node_data[numa], &numa_mask)?;
-            info!("NODE[{:02}] mask= {}", numa, numa_mask);
+            info!("NODE[{numa:02}] mask= {numa_mask}");
 
             for dom in node_domains.iter() {
                 // XXX Remove this by using the topo node's cpumask.
@@ -702,7 +702,7 @@ impl<'a> Scheduler<'a> {
             slice_us: self.tuner.slice_ns / 1000,
 
             cpu_busy,
-            load: node_stats.iter().map(|(_k, v)| v.load).sum::<f64>(),
+            load: node_stats.values().map(|v| v.load).sum::<f64>(),
             nr_migrations: sc.bpf_stats[bpf_intf::stat_idx_RUSTY_STAT_LOAD_BALANCE as usize],
 
             task_get_err: sc.bpf_stats[bpf_intf::stat_idx_RUSTY_STAT_TASK_GET_ERR as usize],
@@ -753,7 +753,7 @@ impl<'a> Scheduler<'a> {
         let mut next_tune_at = now + self.tune_interval;
         let mut next_sched_at = now + self.sched_interval;
 
-        self.skel.maps.stats.value_size() as usize;
+        self.skel.maps.stats.value_size();
 
         while !shutdown.load(Ordering::Relaxed) && !uei_exited!(&self.skel, uei) {
             let now = Instant::now();
