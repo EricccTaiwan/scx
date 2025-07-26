@@ -101,6 +101,15 @@ def run_clippy():
     print("✓ Clippy checks passed", flush=True)
 
 
+def run_check():
+    """Run cargo check and treat warnings as errors."""
+    print("Running cargo check with RUSTFLAGS=-Dwarnings...", flush=True)
+    run_command(
+        ["cargo", "check", "--all-targets", "--locked"], env={"RUSTFLAGS": "-Dwarnings"}
+    )
+    print("✓ Check passed without warnings", flush=True)
+
+
 def run_tests():
     """Run the test suite."""
     print("Running tests...", flush=True)
@@ -185,6 +194,7 @@ def run_all():
     """Run all CI steps in the correct order."""
     run_format()
     run_build()
+    run_check()
     run_clippy()
     run_tests()
 
@@ -206,6 +216,10 @@ def main():
 
     parser_all = subparsers.add_parser("all", help="Run all commands")
 
+    parser_check = subparsers.add_parser(
+        "check", help="Run cargo check with -Dwarnings"
+    )
+
     parser_test_in_vm = subparsers.add_parser(
         "test-in-vm",
         help="Run Rust tests in VM (intended to be invoked by this script)",
@@ -219,6 +233,8 @@ def main():
         run_build()
     elif args.command == "clippy":
         run_clippy()
+    elif args.command == "check":
+        run_check()
     elif args.command == "test":
         run_tests()
     elif args.command == "test-in-vm":

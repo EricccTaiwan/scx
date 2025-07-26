@@ -28,6 +28,9 @@ jobs:
       - name: Clippy
         run: nix run ./.github/include#ci -- clippy
 
+      - name: Check
+        run: nix run ./.github/include#ci -- check
+
   build-and-test:
     runs-on: ${{ github.repository_owner == 'sched-ext' && fromJSON('[ "self-hosted", "linux", "x64", "metal:nixos" ]') || 'ubuntu-latest' }}
     needs: build-kernels
@@ -39,12 +42,14 @@ jobs:
         with:
           cachix-auth-token: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-
       - name: Build
         run: nix run ./.github/include#ci -- build
 
       - name: Test
         run: nix run ./.github/include#ci -- test
+
+      - name: Check
+        run: nix run ./.github/include#ci -- check
 
   integration-test:
     uses: ./.github/workflows/integration-tests.yml
