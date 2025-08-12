@@ -13,6 +13,7 @@ c_scheds=(scx_simple scx_qmap scx_central scx_flatcg)
 
 headers=($(
     git ls-files include |
+    grep -v include/lib | 
     grep -v include/vmlinux |
     grep -v include/arch |
     grep -v '\.gitignore$'
@@ -58,8 +59,9 @@ for ((i=0;i<${#srcs[@]};i++)); do
     orig="$src"
 
     if [ ! -f "$dst" ]; then
-        echo "Creating missing file: $dst"
-        nr_created=$((nr_created+1))
+        echo "WARNING: $dst does not exist" 1>&2
+        nr_missing=$((nr_missing+1))
+        continue
     fi
 
     #
@@ -88,4 +90,5 @@ for ((i=0;i<${#srcs[@]};i++)); do
     cp -f "$src" "$dst"
 done
 
+echo "Synced how many ...."
 echo "Skipped $nr_skipped unchanged and created $nr_created new files"
